@@ -67,3 +67,16 @@ variable "max_instances" {
   EOT
 }
 
+variable "cluster_autoscaler_version" {
+  default     = "9.21.0"
+  description = <<-EOT
+  Version of cluster autoscaler helm chart to install.
+  EOT
+}
+
+variable "cert_manager_version" {
+  default     = "1.9.1"
+  description = <<-EOT
+  Version of cert-manager helm chart to install.
+  EOT
+}
