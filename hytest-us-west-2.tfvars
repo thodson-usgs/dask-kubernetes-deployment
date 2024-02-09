@@ -5,7 +5,7 @@ cluster_name = "hytest-dask"
 
 aws_tags = {
   "wma:project_id"     = "hytest"
-  "wma:application_id" = "pangeo_forge_runner"
+  "wma:application_id" = "dask-operator"
   "wma:contact"        = "thodson@usgs.gov"
 }
 
