@@ -39,6 +39,50 @@ resource "helm_release" "autoscaler" {
   wait = true
 
   depends_on = [
+    aws_eks_cluster.cluster,
+    module.cluster_autoscaler_irsa
+  ]
+}
+
+resource "helm_release" "kuberay_operator" {
+  name             = "kuberay-operator"
+  repository       = "https://ray-project.github.io/kuberay-helm"
+  chart            = "kuberay-operator"
+  namespace        = "ray"
+  create_namespace = true
+  version          = var.kuberay_operator_version
+
+  wait = true
+  depends_on = [
+    aws_eks_cluster.cluster
+  ]
+}
+
+# Kuberay does not provide a prebuilt arm image for the apiserver
+# resource "helm_release" "kuberay_apiserver" {
+#   name             = "kuberay-apiserver"
+#   repository       = "https://ray-project.github.io/kuberay-helm"
+#   chart            = "kuberay-apiserver"
+#   namespace        = "ray"
+#   create_namespace = false  # namespace already created by operator
+#   version          = var.kuberay_operator_version
+# 
+#   wait = false
+#   depends_on = [
+#     helm_release.kuberay_operator
+#   ]
+# }
+
+resource "helm_release" "ingress" {
+  name             = "ingress"
+  repository       = "https://kubernetes.github.io/ingress-nginx"
+  chart            = "ingress-nginx"
+  namespace        = "support"
+  create_namespace = true
+  version          = var.nginx_ingress_version
+
+  wait = false  # On private VPC
+  depends_on = [
     aws_eks_cluster.cluster
   ]
 }

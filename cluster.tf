@@ -53,7 +53,7 @@ resource "aws_iam_openid_connect_provider" "cluster_oidc" {
 module "cluster_autoscaler_irsa" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
 
-  role_name = "${var.cluster_name}_cluster_autoscaler"
+  role_name = "${var.cluster_name}-cluster-autoscaler"
   role_permissions_boundary_arn = var.permissions_boundary
 
   attach_cluster_autoscaler_policy = true
@@ -64,8 +64,7 @@ module "cluster_autoscaler_irsa" {
   oidc_providers = {
     main = {
       provider_arn = aws_iam_openid_connect_provider.cluster_oidc.arn
-      # FIXME: We can't depend on release name + ns of cluster-autoscaler helm_release, because it
-      # creates a circular dependency (lol).
+      # Map the correct service account name for the Helm chart's Cluster Autoscaler deployment
       namespace_service_accounts = ["cluster-autoscaler:cluster-autoscaler-aws-cluster-autoscaler"]
     }
   }

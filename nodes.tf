@@ -29,22 +29,20 @@ resource "aws_iam_role_policy_attachment" "node_worker_ecr_policy_attachment" {
   role       = aws_iam_role.nodegroup.name
 }
 
-resource "aws_eks_node_group" "core_nodes" {
+resource "aws_eks_node_group" "nodes" {
+  for_each        = var.node_groups
   cluster_name    = aws_eks_cluster.cluster.name
-  node_group_name = "core"
+  node_group_name = each.key
   node_role_arn   = aws_iam_role.nodegroup.arn
-
-  # FIXME: Need to restrict this to a single AZ maybe
-  subnet_ids = data.aws_subnets.default.ids
-
-  instance_types = [var.instance_type]
-
-  capacity_type = var.capacity_type
+  subnet_ids      = data.aws_subnets.default.ids
+  instance_types  = [each.value.instance_type]
+  capacity_type   = each.value.capacity_type
+  ami_type        = each.value.ami_type
 
   scaling_config {
-    desired_size = 1
-    max_size     = var.max_instances
-    min_size     = 0
+    desired_size = each.value.desired_size
+    max_size     = each.value.max_size
+    min_size     = each.value.min_size
   }
 
   lifecycle {
@@ -53,6 +51,12 @@ resource "aws_eks_node_group" "core_nodes" {
   }
   update_config {
     max_unavailable = 1
+  }
+
+  # Tags to allow Cluster Autoscaler to discover and scale these Auto Scaling Groups
+  tags = {
+    "kubernetes.io/cluster/${var.cluster_name}"       = "owned"
+    "k8s.io/cluster-autoscaler/enabled"              = "true"
   }
 
   # Ensure that IAM Role permissions are created before and deleted after EKS Node Group handling.
