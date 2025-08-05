@@ -1,0 +1,136 @@
+
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: ray-cluster
+spec:
+  rayVersion: '2.46.0'
+  enableInTreeAutoscaling: true
+  autoscalerOptions:
+    version: v2
+    upscalingMode: Default
+    idleTimeoutSeconds: 60
+    imagePullPolicy: IfNotPresent
+    # Optionally specify the Autoscaler container's securityContext.
+    securityContext: {}
+    env: []
+    # AUTOSCALER_UPDATE_INTERVAL_S is used to control how often the Autoscaler container checks the cluster state
+    # and decides whether to request scaling the cluster up or down. The default value is 5 seconds.
+    # - name: AUTOSCALER_UPDATE_INTERVAL_S
+    #   value: "5"
+    envFrom: []
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+  # Ray head pod configuration
+  headGroupSpec:
+    # Kubernetes Service Type. This is an optional field, and the default value is ClusterIP.
+    # Refer to https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types.
+    serviceType: ClusterIP
+    # The `rayStartParams` are used to configure the `ray start` command.
+    # See https://github.com/ray-project/kuberay/blob/master/docs/guidance/rayStartParams.md for the default settings of `rayStartParams` in KubeRay.
+    # See https://docs.ray.io/en/latest/cluster/cli.html#ray-start for all available options in `rayStartParams`.
+    rayStartParams:
+      dashboard-host: '0.0.0.0'
+      num-cpus: "0"  # Head node dedicated to cluster management + autoscaler
+    # pod template
+    template:
+      metadata:
+        labels: {}
+      spec:
+        nodeSelector:
+          eks.amazonaws.com/nodegroup: c7i-2xlarge
+        containers:
+        - name: ray-head
+          #image: public.ecr.aws/anyscale/ray:latest-py312-cu128
+          image: public.ecr.aws/anyscale/ray:latest-py312
+          ports:
+          - containerPort: 6379
+            name: gcs
+          - containerPort: 8265
+            name: dashboard
+          - containerPort: 10001
+            name: client
+          volumeMounts:
+          - mountPath: /tmp/ray
+            name: ray-logs
+          resources:
+            limits:
+              cpu: "8"      # c7i.2xlarge has 8 vCPUs
+              memory: "16G" # c7i.2xlarge has 16GB RAM
+            requests:
+              cpu: "8"
+              memory: "16G"
+        volumes:
+        - name: ray-logs
+          emptyDir: {}
+  workerGroupSpecs:
+  # the pod replicas in this group typed worker
+  - groupName: cpu-workers
+    replicas: 0
+    minReplicas: 0
+    maxReplicas: 10
+    # logical group name, for this called small-group, also can be functional
+    # See https://github.com/ray-project/kuberay/blob/master/docs/guidance/rayStartParams.md for the default settings of `rayStartParams` in KubeRay.
+    # See https://docs.ray.io/en/latest/cluster/cli.html#ray-start for all available options in `rayStartParams`.
+    rayStartParams: {}
+    #pod template
+    template:
+      spec:
+        nodeSelector:
+          eks.amazonaws.com/nodegroup: c7i-2xlarge
+        containers:
+        - name: ray-worker
+          image: public.ecr.aws/anyscale/ray:latest-py312
+          # use volumeMounts.Optional.
+          # Refer to https://kubernetes.io/docs/concepts/storage/volumes/
+          volumeMounts:
+          - mountPath: /tmp/ray
+            name: ray-logs
+          resources:
+            limits:
+              cpu: "8"      # c7i.2xlarge has 8 vCPUs
+              memory: "16G" # c7i.2xlarge has 16GB RAM
+            requests:
+              cpu: "8"
+              memory: "16G"
+        # use volumes
+        # Refer to https://kubernetes.io/docs/concepts/storage/volumes/
+        volumes:
+        - name: ray-logs
+          emptyDir: {}
+  - groupName: gpu-workers
+    replicas: 0
+    minReplicas: 0
+    maxReplicas: 10
+    rayStartParams: {}
+    template:
+      spec:
+        nodeSelector:
+          eks.amazonaws.com/nodegroup: g6-2xlarge
+        containers:
+        - name: ray-worker
+          image: public.ecr.aws/anyscale/ray:latest-py312-cu128
+          # use volumeMounts.Optional.
+          # Refer to https://kubernetes.io/docs/concepts/storage/volumes/
+          volumeMounts:
+          - mountPath: /tmp/ray
+            name: ray-logs
+          resources:
+            limits:
+              cpu: "8"      # g6-2xlarge has 8 vCPUs
+              memory: "16G" # g6-2xlarge has 16GB RAM
+            requests:
+              cpu: "8"
+              memory: "16G"
+        # use volumes
+        # Refer to https://kubernetes.io/docs/concepts/storage/volumes/
+        volumes:
+        - name: ray-logs
+          emptyDir: {}
+
+######################status#################################

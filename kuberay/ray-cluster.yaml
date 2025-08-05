@@ -1,0 +1,49 @@
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: ray-cpu-cluster
+  namespace: ray
+spec:
+  rayVersion: "2.9.0"
+  headGroupSpec:
+    serviceType: ClusterIP
+    rayStartParams:
+      dashboard-host: 0.0.0.0
+    template:
+      spec:
+        containers:
+        - name: ray-head
+          image: rayproject/ray:2.9.0
+          resources:
+            requests:
+              cpu: "8"      # c7i.2xlarge has 8 vCPUs
+              memory: "16G" # c7i.2xlarge has 16GB RAM
+            limits:
+              cpu: "8"
+              memory: "16G"
+          ports:
+            - containerPort: 6379  # Redis
+            - containerPort: 8265  # Dashboard
+            - containerPort: 10001 # Client
+        nodeSelector:
+          eks.amazonaws.com/nodegroup: c7i-2xlarge
+  workerGroupSpecs:
+  - groupName: cpu-workers
+    replicas: 0
+    minReplicas: 0
+    maxReplicas: 5
+    rayStartParams: {}
+    template:
+      spec:
+        containers:
+        - name: ray-worker
+          image: rayproject/ray:2.9.0
+          resources:
+            requests:
+              cpu: "8"      # c7i.2xlarge has 8 vCPUs
+              memory: "16G" # c7i.2xlarge has 16GB RAM
+            limits:
+              cpu: "8"
+              memory: "16G"
+        nodeSelector:
+          eks.amazonaws.com/nodegroup: c7i-2xlarge
