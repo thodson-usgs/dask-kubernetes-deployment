@@ -16,11 +16,19 @@ spec:
           image: rayproject/ray:2.9.0
           resources:
             requests:
+<<<<<<< HEAD
               cpu: "8"      # c7i.2xlarge has 8 vCPUs
               memory: "16G" # c7i.2xlarge has 16GB RAM
             limits:
               cpu: "8"
               memory: "16G"
+=======
+              cpu: "6"      # c7i.2xlarge has 8 vCPUs
+              memory: "14G" # c7i.2xlarge has 16GB RAM
+            limits:
+              cpu: "6"
+              memory: "14G"
+>>>>>>> 81c98e1 (Add ray cluster templates)
           ports:
             - containerPort: 6379  # Redis
             - containerPort: 8265  # Dashboard

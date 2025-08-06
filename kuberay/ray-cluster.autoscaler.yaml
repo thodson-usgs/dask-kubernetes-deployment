@@ -2,7 +2,12 @@
 apiVersion: ray.io/v1
 kind: RayCluster
 metadata:
+<<<<<<< HEAD
   name: ray-cluster
+=======
+  name: ray-autoscale-cluster
+  namespace: ray
+>>>>>>> 81c98e1 (Add ray cluster templates)
 spec:
   rayVersion: '2.46.0'
   enableInTreeAutoscaling: true
@@ -60,11 +65,19 @@ spec:
             name: ray-logs
           resources:
             limits:
+<<<<<<< HEAD
               cpu: "8"      # c7i.2xlarge has 8 vCPUs
               memory: "16G" # c7i.2xlarge has 16GB RAM
             requests:
               cpu: "8"
               memory: "16G"
+=======
+              cpu: "6"      # Leave 2 CPUs for system overhead on c7i.2xlarge
+              memory: "14G" # Leave 2GB for system overhead  
+            requests:
+              cpu: "6"
+              memory: "14G"
+>>>>>>> 81c98e1 (Add ray cluster templates)
         volumes:
         - name: ray-logs
           emptyDir: {}
@@ -93,11 +106,19 @@ spec:
             name: ray-logs
           resources:
             limits:
+<<<<<<< HEAD
               cpu: "8"      # c7i.2xlarge has 8 vCPUs
               memory: "16G" # c7i.2xlarge has 16GB RAM
             requests:
               cpu: "8"
               memory: "16G"
+=======
+              cpu: "6"
+              memory: "16G"
+            requests:
+              cpu: "6"
+              memory: "14G"
+>>>>>>> 81c98e1 (Add ray cluster templates)
         # use volumes
         # Refer to https://kubernetes.io/docs/concepts/storage/volumes/
         volumes:
@@ -122,11 +143,19 @@ spec:
             name: ray-logs
           resources:
             limits:
+<<<<<<< HEAD
               cpu: "8"      # g6-2xlarge has 8 vCPUs
               memory: "16G" # g6-2xlarge has 16GB RAM
             requests:
               cpu: "8"
               memory: "16G"
+=======
+              cpu: "6"      # Leave 2 CPUs for system overhead on g6.2xlarge
+              memory: "14G" # Leave 2GB for system overhead  
+            requests:
+              cpu: "6"
+              memory: "14G"
+>>>>>>> 81c98e1 (Add ray cluster templates)
         # use volumes
         # Refer to https://kubernetes.io/docs/concepts/storage/volumes/
         volumes:
